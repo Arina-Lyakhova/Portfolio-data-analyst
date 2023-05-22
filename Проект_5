@@ -1,0 +1,111 @@
+with first_payments as
+    (select user_id
+        ,  min(date_trunc('day', transaction_datetime)) first_payment_date
+    from skyeng_db.payments
+    where status_name = 'success'
+    group by user_id
+    order by user_id
+    ),
+    
+all_dates as
+    (select distinct date_trunc('day', class_start_datetime ) dt
+    from skyeng_db.classes
+    where extract(year from class_start_datetime) = '2016'
+    order by dt 
+    ),
+    
+payments_by_dates as
+    (select user_id
+        ,  date_trunc('day', transaction_datetime) payment_date
+        ,  sum(classes) transaction_balance_change
+    from skyeng_db.payments
+    where status_name = 'success'
+    group by user_id, payment_date
+    order by user_id desc
+    )
+    ,
+    
+all_dates_by_user as
+    (
+    select p.user_id as user_id
+        ,  ad.dt as dt
+    from all_dates ad
+    left join first_payments p on ad.dt >= p.first_payment_date
+    order by user_id
+    ),
+    
+classes_by_dates as
+    (
+    select user_id
+        ,  date_trunc('day', class_start_datetime) class_date
+        ,  count(id_class) * -1 as classes
+    from skyeng_db.classes
+    where class_status in ('success', 'failed_by_student')
+    and class_type != 'trial'
+    group by user_id, class_date
+    )
+    ,
+    
+payments_by_dates_cumsum as 
+    (
+    select adu.user_id
+        ,  adu.dt
+        ,  coalesce(transaction_balance_change, 0) transaction_balance_change
+        ,  sum(pd.transaction_balance_change) over (partition by adu.user_id order by adu.dt) transaction_balance_change_cs
+    from all_dates_by_user adu
+    left join payments_by_dates pd on adu.user_id = pd.user_id
+        and adu.dt = pd.payment_date
+    ), 
+    
+classes_by_dates_dates_cumsum as 
+    (
+    select adu.user_id
+        ,  adu.dt
+        ,  coalesce(classes, 0) classes
+        ,  sum(cd.classes) over (partition by adu.user_id order by adu.dt) classes_cs
+    from all_dates_by_user adu
+    left join classes_by_dates cd on adu.user_id = cd.user_id
+        and adu.dt = cd.class_date
+    ),
+    
+balances as
+    (
+    select pd_cs.user_id user_id
+        ,  pd_cs.dt dt 
+        ,  pd_cs.transaction_balance_change transaction_balance_change
+        ,  pd_cs.transaction_balance_change_cs transaction_balance_change_cs
+        ,  cd_cs.classes classes
+        ,  cd_cs.classes_cs classes_cs
+        ,  cd_cs.classes_cs + pd_cs.transaction_balance_change_cs as balance
+    from payments_by_dates_cumsum pd_cs
+    left join classes_by_dates_dates_cumsum cd_cs on pd_cs.user_id = cd_cs.user_id
+        and pd_cs.dt = cd_cs.dt
+    ),
+    
+top_1000 as    
+    (select * 
+    from balances
+    order by user_id, dt
+    limit 1000)
+
+    select dt
+        ,  sum(transaction_balance_change) sum_transaction_balance_change
+        ,  sum(transaction_balance_change_cs) sum_transaction_balance_change_cs
+        ,  sum(classes) sum_classes
+        ,  sum(classes_cs) sum_classes_cs
+        ,  sum(balance) sum_balance
+    from balances
+    group by dt
+    order by dt
+    
+    
+-- Выводы:
+-- Исходя из графика можно сделать вывод, что за год было продано достаточно большое количество уроков, при этом
+-- количество просмотренных уроков меньше на несколько тысяч, получается что итоговый баланс студентов растет. 
+-- В целом это объясняется ростом количества клиентов. Также можно заметить, что дисперсия значений по покупке 
+-- имеет максимальные значения осенью. Дисперсия значений по покупке уровков значительно больше, чем по проведенным 
+-- урокам.
+-- Что касается вопросов исходя из таблицы balances, то не очень понятно, как так вышло, что баланс некоторых студентов
+-- уходит в минус, то есть они смотрят уроки, которые еще не были оплачены, учитывая, что триальные уроки были исключены
+-- из выборки. На общей картине это не заметно, так как это исключительные случаи, однако в детальном рассмотрении
+-- встречаются подобные инцеденты. 
