@@ -1,0 +1,18 @@
+select count(purchase_id) count_purchase
+    ,  name_partner
+    ,  count(case when rn_client = 1 then purchase_id end) ::float/count(case when rn_client = 1 then purchase_id end) as rn_1
+    ,  count(case when rn_client = 2 then purchase_id end) ::float/count(case when rn_client = 1 then purchase_id end) as rn_2
+    ,  count(case when rn_client = 3 then purchase_id end) ::float/count(case when rn_client = 1 then purchase_id end) as rn_3
+    ,  count(case when rn_client = 4 then purchase_id end) ::float/count(case when rn_client = 1 then purchase_id end) as rn_4
+    ,  count(case when rn_client = 5 then purchase_id end) ::float/count(case when rn_client = 1 then purchase_id end) as rn_5
+    ,  count(case when rn_client = 6 then purchase_id end) ::float/count(case when rn_client = 1 then purchase_id end) as rn_6
+from
+    (select user_id
+        ,  purchase_id
+        ,  date_purchase
+        ,  name_partner
+        ,  row_number() over (partition by user_id order by date_purchase asc) as rn_client
+    from skycinema.client_sign_up c
+    left join skycinema.partner_dict p on c.partner = p.id_partner
+    ) rn_clients
+group by name_partner
