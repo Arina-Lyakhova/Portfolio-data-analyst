@@ -48,7 +48,9 @@
 <br>
 Были рассчитаны необходимые для калькулятора показатели: CAC, Retention, LT, доля скидок, цена 1 урока, LTR и маржинальность. Для каждого показателя был создан столбец факт, изменение и план. Также было создано несколько визуализаций: интенсивность просмотров, Retention, распределение просмотров по суточным часам в разрезе будни-выходные и топ 10 фильмов. После чего были подобраны необходимые изменения для получения маржинальности 25%. 
 
-> [Презентация проект 2.pptx](https://github.com/Arina-Lyakhova/Portfolio-data-analyst/blob/04bb5ac35a6d96bd141c7b179f71a505eb6b3920/%D0%9F%D1%80%D0%B5%D0%B7%D0%B5%D0%BD%D1%82%D0%B0%D1%86%D0%B8%D1%8F%20%D0%BF%D1%80%D0%BE%D0%B5%D0%BA%D1%82%202.pptx)
+>[Проект 2.xlsx](https://github.com/Arina-Lyakhova/Portfolio-data-analyst/blob/a219dc4f23c5c61e10e788cb6c02d61ab10e8c90/%D0%9F%D1%80%D0%BE%D0%B5%D0%BA%D1%82_2.xlsx) 
+><br>
+>[Презентация проект 2.pptx](https://github.com/Arina-Lyakhova/Portfolio-data-analyst/blob/04bb5ac35a6d96bd141c7b179f71a505eb6b3920/%D0%9F%D1%80%D0%B5%D0%B7%D0%B5%D0%BD%D1%82%D0%B0%D1%86%D0%B8%D1%8F%20%D0%BF%D1%80%D0%BE%D0%B5%D0%BA%D1%82%202.pptx) 
 
 Выводы:
 <br> 
